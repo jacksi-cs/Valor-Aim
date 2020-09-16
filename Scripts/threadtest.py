@@ -11,6 +11,7 @@ import time
 
 scoped = False
 alreadyScoped = False
+shot = False
 
 def standby(real_img):
 	global scoped
@@ -26,6 +27,20 @@ def standby(real_img):
 	else:
 		alreadyScoped = False
 
+
+def trueaimbot(avgx, avgy):
+	global scoped
+	global alreadyScoped
+
+	xval = int(round((avgx-250)*(5/3)))
+	# yval = 250-avgy
+
+	if (shot):
+		print("REE: ", xval)
+		serTest.write(xval.to_bytes(2, byteorder = 'big', signed = True))
+		print("Done")
+		time.sleep(1)
+		
 
 def nothing(x):
 	pass
@@ -60,6 +75,10 @@ def color_aimbot():
 			miny = int(round(min(pixels[1])))
 			maxy = int(round(max(pixels[1]))) 
 			real_img[minx:maxx, miny:maxy] = [201,40,40]
+			
+			#avgy = int(round(sum0/len0))
+			#avgx = int(round(sum1/len1))
+			#real_img[avgy-5:avgy+5, avgx-5:avgx+5] = [201,40,40]
 
 		standby(real_img)
 
@@ -72,7 +91,6 @@ def color_aimbot():
 			break
 
 def mouse_listener():
-	global scoped
 
 	# Forces me to reclick right click after shooting rather than just holding down right click
 	def on_click(x, y, button, pressed):

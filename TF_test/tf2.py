@@ -5,7 +5,7 @@ import tensorflow as tf
 def download_images():
 	image_paths = []
 	base_url = 'https://github.com/utjacksi/Valorant-Bot/tree/master/Images/'
-	filenames = ['Screenshot (54).png']
+	filenames = ['test1']
 	
 	for filename in filenames:
 		image_path = tf.keras.utils.get_file(fname = filename, origin = base_url + filename, untar = False)

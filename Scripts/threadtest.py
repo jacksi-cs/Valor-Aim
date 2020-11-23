@@ -52,8 +52,10 @@ def color_aimbot():
 
 	while True:
 		last_time=time.time()
-		lower_range = np.array([145, 160, 150])
-		upper_range = np.array([150, 190, 255])
+		#lower_range = np.array([145, 160, 150])
+		#upper_range = np.array([150, 190, 255])
+		lower_range = np.array([159, 104, 127])
+		upper_range = np.array([179, 255, 255])
 
 		sct.get_pixels(mon)
 		img = Image.frombytes('RGB', (sct.width, sct.height), sct.image) # RGB image
@@ -63,7 +65,8 @@ def color_aimbot():
 		res = cv2.bitwise_and(real_img, real_img, mask= mask) # BGR and mask put together
 	
 		pixels = np.nonzero(mask) # Tuple of arrays containing coordinates of white pixels
-	
+		print(pixels)
+
 		sum0 = sum(pixels[0])
 		len0 = len(pixels[0])
 		sum1 = sum(pixels[1])
@@ -73,18 +76,16 @@ def color_aimbot():
 			minx = int(round(min(pixels[0])))
 			maxx = int(round(max(pixels[0])))
 			miny = int(round(min(pixels[1])))
-			maxy = int(round(max(pixels[1]))) 
-			real_img[minx:maxx, miny:maxy] = [201,40,40]
-			
-			#avgy = int(round(sum0/len0))
-			#avgx = int(round(sum1/len1))
-			#real_img[avgy-5:avgy+5, avgx-5:avgx+5] = [201,40,40]
+			maxy = int(round(max(pixels[1])))
+			cv2.circle(real_img, (int(pixels[1][np.argmax(pixels[0])]), minx-5), 5, (0,255,255), -1)
+			#real_img[80:100, minx:maxx] = [201,40,40]
 
 		standby(real_img)
 
 		frame = np.array(real_img)
 		cv2.putText(frame, "FPS: %f" % (1.0 / (time.time() - last_time)), (10, 10),  cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 		cv2.imshow("frame", frame)
+		cv2.imshow("mask", mask)
 
 		if cv2.waitKey(25) & 0xFF == ord('q'):
 			cv2.destroyAllWindows()

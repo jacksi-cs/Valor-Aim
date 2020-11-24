@@ -26,14 +26,17 @@ while True:
     u_s = cv2.getTrackbarPos("UPPER S", "Trackbars")
     u_v = cv2.getTrackbarPos("UPPER V", "Trackbars")
     
+    lower_range = np.array([200,50,200])
+    upper_range = np.array([300,150,300])
     #lower_range = np.array([l_h, l_s, l_v])
     #upper_range = np.array([u_h, u_s, u_v])
-    lower_range = np.array([159,104,127])
-    upper_range = np.array([179,255,255])
+    #lower_range = np.array([159,104,127])
+    #upper_range = np.array([179,255,255])
     sct.get_pixels(mon)
     img = Image.frombytes('RGB', (sct.width, sct.height), sct.image) # RGB image
-    hsv = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2HSV) # HSV image
-    mask = cv2.inRange(hsv, lower_range, upper_range) # B/W mask of image (RGB? BGR? GRAYSCALE?)
+    #hsv = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2HSV) # HSV image
+    #mask = cv2.inRange(hsv, lower_range, upper_range) # B/W mask of image (RGB? BGR? GRAYSCALE?)
+    mask = cv2.inRange(np.array(img), lower_range, upper_range) # using a mask with RGB rather than HSV (seems to work better)
     real_img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR) # BGR image	
     res = cv2.bitwise_and(real_img, real_img, mask= mask) # BGR and mask put together
 
@@ -48,7 +51,7 @@ while True:
         minval = min(pixels[0]) # highest point on the y axis (should be the head)
         min1 = int(round(pixels[0][0])) # minimum value in the array (highest point on the y axis <head>)
         min2 = int(round(pixels[1][0])) # the x coordinate of the lowest y value
-        cv2.circle(real_img, (min2, min1+8), 5, (0,255,255), -1)
+        cv2.circle(real_img, (min2, min1+5), 5, (0,255,255), -1)
 
     frame = np.array(real_img)
     #cv2.putText(frame, "FPS: %f" % (1.0 / (time.time() - last_time)), (10, 10),  cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)

@@ -1,14 +1,17 @@
-import cv2
+import cv2 # pip install opencv-python
 import numpy as np
-from mss import mss
-from PIL import Image
+from mss import mss  # pip install mss==2.0.22
+from PIL import Image # pip install Pillow
 import time
-import serial
+import serial # pip install pyserial
 import struct
 
 import keyboard
 
 scripts_on = False
+
+def smooth_move(var):
+    return var - 250
 
 def arduino_conversion(var, x_or_y):
     diff = -1
@@ -32,8 +35,8 @@ def nothing(x):
 ser = serial.Serial('COM5', 9600, write_timeout=5)
 # time.sleep(5)
 
-#mon = {'top': 290, 'left': 710, 'width': 500, 'height': 500}
-mon = {'top': 415, 'left': 835, 'width': 250, 'height': 250 }
+mon = {'top': 290, 'left': 710, 'width': 500, 'height': 500}
+#mon = {'top': 415, 'left': 835, 'width': 250, 'height': 250 }
 sct = mss()
 
 # Used for determining HSV values
@@ -90,11 +93,10 @@ while True:
             min2 = int(round(pixels[1][0])) # the x coordinate of the lowest y value
             cv2.circle(real_img, (min2, min1+5), 5, (0,255,255), -1)
             # print("COORD: " ,min1, min2)
-            ser.write(struct.pack('b', arduino_conversion(min2, 'x')))
-            ser.write(struct.pack('b', arduino_conversion(min1+5, 'y')))
-            time.sleep(0.03)
-            # print("X: ", ser.read(), " ")
-            # print("Y: ", ser.read())
+            #ser.write(struct.pack('b', arduino_conversion(min2, 'x')))
+            #ser.write(struct.pack('b', arduino_conversion(min1+5, 'y')))
+            ser.write(struct.pack('h', smooth_move(min1+5)))
+            ser.write(struct.pack('h', smooth_move(min2)))
 
         frame = np.array(real_img)
         # cv2.putText(frame, "FPS: %f" % (1.0 / (time.time() - last_time)), (10, 10),  cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)

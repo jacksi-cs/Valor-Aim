@@ -8,20 +8,39 @@ from PIL import Image # pip install Pillow
 import time
 import serial # pip install pyserial
 import struct
+from enum import Enum
+
+class Border(Enum):
+    RED = 1
+    PURPLE = 2
+    YELLOWD = 3
+    YELLOWP = 4
 
 # ** CUSTOM SETTINGS **
-detect_width = 254
-detect_height = 254
+screen_width = 1600
+screen_height = 900
+detect_width = 127
+detect_height = 127
+offset_x = 0
+offset_y = 0
+script_toggle = keyboard.Key.caps_lock
+border = Border.RED
 
 scripts_on = False
+ser = serial.Serial('COM5', 9600, write_timeout=5)
+
+
 
 def smooth_move(var, x_or_y):
-    return int(var - detect_width/2) if (x_or_y == 'x') else int(var - detect_height/2) 
-    #return var - 127
+    global detect_width
+    global detect_height
+    global offset_x
+    global offset_y
+    return int(var - detect_width/2 - offset_x/2) if (x_or_y == 'x') else int(var - detect_height/2 - offset_y/2) 
 
 def arduino_communication(x, y):
     global scripts_on
-    ser = serial.Serial('COM5', 9600, write_timeout=5)
+    global ser
 
     if scripts_on:
         ser.write(struct.pack('h', smooth_move(y, 'y')))
@@ -32,26 +51,38 @@ def arduino_communication(x, y):
 
 def aimbot():
     # time.sleep(5)
+    global screen_width
+    global screen_height
     global detect_width
     global detect_height
-    mon = {'top': int((1080-detect_height)/2), 'left': int((1920-detect_width)/2), 'width': detect_width, 'height': detect_height}
-    #mon = {'top': 290, 'left': 710, 'width': 500, 'height': 500}
-    #mon = {'top': 415, 'left': 835, 'width': 250, 'height': 250 }
+    global border
+    mon = {'top': int((screen_height-offset_y-detect_height)/2), 'left': int((screen_width-offset_x-detect_width)/2), 'width': detect_width, 'height': detect_height}
     sct = mss()
 
     # Used for determining HSV values
     # cv2.namedWindow("Trackbars")
-    # cv2.createTrackbar("LOWER H", "Trackbars", 0, 179, nothing)
+    # cv2.createTrackbar("LOWER H", "Trackbars", 0, 255, nothing)
     # cv2.createTrackbar("LOWER S", "Trackbars", 0, 255, nothing)
     # cv2.createTrackbar("LOWER V", "Trackbars", 0, 255, nothing)
-    # cv2.createTrackbar("UPPER H", "Trackbars", 0, 179, nothing)
+    # cv2.createTrackbar("UPPER H", "Trackbars", 0, 255, nothing)
     # cv2.createTrackbar("UPPER S", "Trackbars", 0, 255, nothing)
     # cv2.createTrackbar("UPPER V", "Trackbars", 0, 255, nothing)
 
-    while True:
-        # print("in while true")
-        #while scripts_on:
+    if border == Border.RED:
+        lower_range = np.array([200,50,200])
+        upper_range = np.array([300,150,300])
+    elif border == Border.PURPLE:
+        # Ranges for RGB purple (source recommends 250,100,250 with 60 range)
+        lower_range = np.array([200,50,200])
+        upper_range = np.array([300,150,300])
+    elif border == Border.YELLOWD:
+        lower_range = np.array([200,50,200])
+        upper_range = np.array([300,150,300])
+    elif border == Border.YELLOWP:
+        lower_range = np.array([200,50,200])
+        upper_range = np.array([300,150,300])
 
+    while True:
         # l_h = cv2.getTrackbarPos("LOWER H", "Trackbars")
         # l_s = cv2.getTrackbarPos("LOWER S", "Trackbars")
         # l_v = cv2.getTrackbarPos("LOWER V", "Trackbars")
@@ -59,17 +90,9 @@ def aimbot():
         # u_s = cv2.getTrackbarPos("UPPER S", "Trackbars")
         # u_v = cv2.getTrackbarPos("UPPER V", "Trackbars")
         
-        #Ranges for RGB purple (source recommends 250,100,250 with 60 range)
-        lower_range = np.array([190,40,190])
-        upper_range = np.array([310,160,310])
-
         # Ranges for using the trackbars
         # lower_range = np.array([l_h, l_s, l_v])
         # upper_range = np.array([u_h, u_s, u_v])
-
-        # Ranges for HSV red
-        # lower_range = np.array([159,104,127])
-        # upper_range = np.array([179,255,255])
 
         sct.get_pixels(mon)
         img = Image.frombytes('RGB', (sct.width, sct.height), sct.image) # RGB image
@@ -102,28 +125,17 @@ def aimbot():
             break
 
 def scripts_switch():
-    # def on_click(x,y,button,pressed):
-    #     global scripts_on
-    #     if (button == mouse.Button.right and pressed):
-    #         print(1234)
-    #         scripts_on = True
-    #     else:
-    #         print(6543)
-    #         scripts_on = False
 
-    # with mouse.Listener(on_click=on_click) as listener:
-    #     listener.join()
     def on_press(key):
         global scripts_on
-        if key == keyboard.Key.caps_lock:
-            print("asdf")
+        global script_toggle
+        global ser
+        if key == script_toggle:
             scripts_on = not scripts_on
-    
-    # def on_release(key):
-    #     global scripts_on
-    #     if key == keyboard.Key.caps_lock:
-    #         print("1234")
-    #         scripts_on = False
+            if scripts_on == False:
+                ser.write(struct.pack('h', 9999))
+
+            print(scripts_on)
 
     with keyboard.Listener(
         on_press=on_press) as listener:

@@ -14,6 +14,7 @@ void loop() {
     byte y[2];
     y[1] = Serial.read();
     y[0] = Serial.read();
+    
     delay(1);
     byte x[2];
     x[1] = Serial.read();
@@ -21,12 +22,20 @@ void loop() {
 
     int x_int = int(x[0] << 8 | x[1]);
     int y_int = int(y[0] << 8 | y[1]);
-    while(!move_mouse(&x_int, &y_int));
+
+    if (x_int == 9999 || y_int == 9999) {
+      while (Serial.available() > 0) {
+        char t = Serial.read();  
+      } 
+    }
+    else {
+      while(!move_mouse(&x_int, &y_int));
+    }
   }
 }
 
 bool move_mouse(int *x, int *y) {
-  int jump_distance = 10;
+  int jump_distance = 1; // Can be modified to change smoothness of the mouse movement
   int x_val = *x;
   int y_val = *y;
 

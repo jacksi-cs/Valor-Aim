@@ -9,18 +9,19 @@ import time
 import serial # pip install pyserial
 import struct
 from enum import Enum
+from pynput import mouse
 
 class Border(Enum):
     RED = 1
     PURPLE = 2
-    YELLOWD = 3
-    YELLOWP = 4
+    YELLOW = 3
 
 # ** CUSTOM SETTINGS **
-screen_width = 1600
-screen_height = 900
+screen_width = 1920
+screen_height = 1080
 detect_width = 127
 detect_height = 127
+
 offset_x = 0
 offset_y = 0
 script_toggle = keyboard.Key.caps_lock
@@ -28,7 +29,7 @@ border = Border.RED
 
 scripts_on = False
 ser = serial.Serial('COM5', 9600, write_timeout=5)
-
+        
 
 
 def smooth_move(var, x_or_y):
@@ -41,16 +42,15 @@ def smooth_move(var, x_or_y):
 def arduino_communication(x, y):
     global scripts_on
     global ser
-
+    
     if scripts_on:
         ser.write(struct.pack('h', smooth_move(y, 'y')))
         ser.write(struct.pack('h', smooth_move(x, 'x')))
 
-# def nothing(x):
-#     pass
+def nothing(x):
+    pass
 
 def aimbot():
-    # time.sleep(5)
     global screen_width
     global screen_height
     global detect_width
@@ -60,37 +60,33 @@ def aimbot():
     sct = mss()
 
     # Used for determining HSV values
-    # cv2.namedWindow("Trackbars")
-    # cv2.createTrackbar("LOWER H", "Trackbars", 0, 255, nothing)
-    # cv2.createTrackbar("LOWER S", "Trackbars", 0, 255, nothing)
-    # cv2.createTrackbar("LOWER V", "Trackbars", 0, 255, nothing)
-    # cv2.createTrackbar("UPPER H", "Trackbars", 0, 255, nothing)
-    # cv2.createTrackbar("UPPER S", "Trackbars", 0, 255, nothing)
-    # cv2.createTrackbar("UPPER V", "Trackbars", 0, 255, nothing)
+    cv2.namedWindow("Trackbars")
+    cv2.createTrackbar("LOWER H", "Trackbars", 0, 255, nothing)
+    cv2.createTrackbar("LOWER S", "Trackbars", 0, 255, nothing)
+    cv2.createTrackbar("LOWER V", "Trackbars", 0, 255, nothing)
+    cv2.createTrackbar("UPPER H", "Trackbars", 0, 255, nothing)
+    cv2.createTrackbar("UPPER S", "Trackbars", 0, 255, nothing)
+    cv2.createTrackbar("UPPER V", "Trackbars", 0, 255, nothing)
 
     if border == Border.RED:
-        lower_range = np.array([200,50,200])
-        upper_range = np.array([300,150,300])
+        lower_range = np.array([200,50,50])
+        upper_range = np.array([255,100,100])
     elif border == Border.PURPLE:
         # Ranges for RGB purple (source recommends 250,100,250 with 60 range)
         lower_range = np.array([200,50,200])
-        upper_range = np.array([300,150,300])
-    elif border == Border.YELLOWD:
-        lower_range = np.array([200,50,200])
-        upper_range = np.array([300,150,300])
-    elif border == Border.YELLOWP:
-        lower_range = np.array([200,50,200])
-        upper_range = np.array([300,150,300])
+        upper_range = np.array([255,150,255])
+    elif border == Border.YELLOW:
+        lower_range = np.array([200,200,0])
+        upper_range = np.array([255,255,60])
 
     while True:
-        # l_h = cv2.getTrackbarPos("LOWER H", "Trackbars")
-        # l_s = cv2.getTrackbarPos("LOWER S", "Trackbars")
-        # l_v = cv2.getTrackbarPos("LOWER V", "Trackbars")
-        # u_h = cv2.getTrackbarPos("UPPER H", "Trackbars")
-        # u_s = cv2.getTrackbarPos("UPPER S", "Trackbars")
-        # u_v = cv2.getTrackbarPos("UPPER V", "Trackbars")
-        
-        # Ranges for using the trackbars
+        l_h = cv2.getTrackbarPos("LOWER H", "Trackbars")
+        l_s = cv2.getTrackbarPos("LOWER S", "Trackbars")
+        l_v = cv2.getTrackbarPos("LOWER V", "Trackbars")
+        u_h = cv2.getTrackbarPos("UPPER H", "Trackbars")
+        u_s = cv2.getTrackbarPos("UPPER S", "Trackbars")
+        u_v = cv2.getTrackbarPos("UPPER V", "Trackbars")
+
         # lower_range = np.array([l_h, l_s, l_v])
         # upper_range = np.array([u_h, u_s, u_v])
 
@@ -133,7 +129,7 @@ def scripts_switch():
         if key == script_toggle:
             scripts_on = not scripts_on
             if scripts_on == False:
-                ser.write(struct.pack('h', 9999))
+                ser.write(struct.pack('h', 32767))
 
             print(scripts_on)
 
@@ -141,6 +137,19 @@ def scripts_switch():
         on_press=on_press) as listener:
             listener.join()
 
+def recoil():
+    def on_click(x,y,button,pressed):
+        if (button == mouse.Button.left and pressed):
+            print("Should be seen")
+            ser.write(struct.pack('h', 32766))
+
+        elif (button == mouse.Button.left and not pressed):
+            ser.write(struct.pack('h', 32765))
+
+    with mouse.Listener(on_click=on_click) as listener:
+        listener.join()
+
 
 Thread(target = aimbot).start()
 Thread(target = scripts_switch).start()
+Thread(target = recoil).start()

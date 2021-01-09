@@ -1,29 +1,35 @@
 from threading import Thread
 
-from pynput import mouse
+from pynput import mouse, keyboard
 import cv2
 import numpy as np
 from mss import mss
 from PIL import Image
 import pyautogui
-import keyboard
 import time
 
 scoped = False
 alreadyScoped = False
 
+screen_width = 1920
+screen_height = 1080
+detect_width = 500
+detect_height = 500
+offset_x = 0
+offset_y = 0
+script_toggle = keyboard.Key.num_lock
+scripts_on = False
+
 def standby(real_img):
 	global scoped
 	global alreadyScoped
+	global scripts_on
 
 	# print("Scoped value: ", scoped)
-	if (scoped):
-		print("1")
+	if (scoped and scripts_on):
 		if (real_img[250,250][0] == 201 and real_img[250,250][1] == 40 and real_img[250,250][2] == 40):
 			if not alreadyScoped:
-				print("2")
 				time.sleep(0.2)
-			print("3")
 			pyautogui.click()
 		alreadyScoped = True
 	else:
@@ -34,19 +40,26 @@ def nothing(x):
 	pass
 
 def color_aimbot():
+	global screen_width
+	global screen_height
+	global detect_width
+	global detect_height
+	global offset_x
+	global offset_y
 
-	mon = {'top': 200, 'left': 550, 'width': 500, 'height': 500}
+	mon = {'top': int((screen_height-offset_y-detect_height)/2), 'left': int((screen_width-offset_x-detect_width)/2), 'width': detect_width, 'height': detect_height}
 	sct = mss()
 
 	while True:
 		last_time=time.time()
-		lower_range = np.array([145, 160, 150])
-		upper_range = np.array([150, 190, 255])
+		lower_range = np.array([200,50,200])
+		upper_range = np.array([255,150,255])
 
 		sct.get_pixels(mon)
 		img = Image.frombytes('RGB', (sct.width, sct.height), sct.image) # RGB image
-		hsv = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2HSV) # HSV image
-		mask = cv2.inRange(hsv, lower_range, upper_range) # B/W mask of image (RGB? BGR? GRAYSCALE?)
+		# hsv = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2HSV) # HSV image
+		# mask = cv2.inRange(hsv, lower_range, upper_range) # B/W mask of image (RGB? BGR? GRAYSCALE?)
+		mask = cv2.inRange(np.array(img), lower_range, upper_range) # using a mask with RGB rather than HSV (seems to work better)
 		real_img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR) # BGR image	
 		res = cv2.bitwise_and(real_img, real_img, mask= mask) # BGR and mask put together
 	
@@ -82,13 +95,33 @@ def mouse_listener():
 		if (button == mouse.Button.right and pressed):
 			global scoped 
 			scoped = True
+			print(scoped)
 		else:
 			scoped = False	
+			print(scoped)
 
 	with mouse.Listener(on_click=on_click) as listener:
 		listener.join()	
+
+def scripts_switch():
+
+    def on_press(key):
+        global scripts_on
+        global script_toggle
+        global ser
+        if key == script_toggle:
+            scripts_on = not scripts_on
+            if scripts_on == False:
+                ser.write(struct.pack('h', 32767))
+
+            print(scripts_on)
+
+    with keyboard.Listener(
+        on_press=on_press) as listener:
+            listener.join()
 			
 
 
 Thread(target = color_aimbot).start()
 Thread(target = mouse_listener).start()
+Thread(target = scripts_switch).start()

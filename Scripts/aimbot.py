@@ -25,12 +25,10 @@ detect_height = 127
 offset_x = 0
 offset_y = 0
 script_toggle = keyboard.Key.caps_lock
-border = Border.RED
+border = Border.YELLOW
 
 scripts_on = False
-ser = serial.Serial('COM5', 9600, write_timeout=5)
-        
-
+ser = serial.Serial('COM5', 9600, write_timeout=5)  
 
 def smooth_move(var, x_or_y):
     global detect_width

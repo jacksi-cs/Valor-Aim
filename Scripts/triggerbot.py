@@ -7,10 +7,18 @@ from mss import mss
 from PIL import Image
 import pyautogui
 import time
+from enum import Enum
+
+class Border(Enum):
+    RED = 1
+    PURPLE = 2
+    YELLOW = 3
 
 scoped = False
 alreadyScoped = False
+scripts_on = False
 
+# ** CUSTOM SETTINGS **
 screen_width = 1920
 screen_height = 1080
 detect_width = 500
@@ -18,14 +26,13 @@ detect_height = 500
 offset_x = 0
 offset_y = 0
 script_toggle = keyboard.Key.num_lock
-scripts_on = False
+border = Border.YELLOW
 
 def standby(real_img):
 	global scoped
 	global alreadyScoped
 	global scripts_on
 
-	# print("Scoped value: ", scoped)
 	if (scoped and scripts_on):
 		if (real_img[250,250][0] == 201 and real_img[250,250][1] == 40 and real_img[250,250][2] == 40):
 			if not alreadyScoped:
@@ -46,14 +53,24 @@ def color_aimbot():
 	global detect_height
 	global offset_x
 	global offset_y
+	global border
+
+	if border == Border.RED:
+		lower_range = np.array([200,50,50])
+		upper_range = np.array([255,100,100])
+	elif border == Border.PURPLE:
+        # Ranges for RGB purple (source recommends 250,100,250 with 60 range)
+		lower_range = np.array([200,50,200])
+		upper_range = np.array([255,150,255])
+	elif border == Border.YELLOW:
+		lower_range = np.array([200,200,0])
+		upper_range = np.array([255,255,60])
 
 	mon = {'top': int((screen_height-offset_y-detect_height)/2), 'left': int((screen_width-offset_x-detect_width)/2), 'width': detect_width, 'height': detect_height}
 	sct = mss()
 
 	while True:
 		last_time=time.time()
-		lower_range = np.array([200,50,200])
-		upper_range = np.array([255,150,255])
 
 		sct.get_pixels(mon)
 		img = Image.frombytes('RGB', (sct.width, sct.height), sct.image) # RGB image
@@ -111,17 +128,11 @@ def scripts_switch():
         global ser
         if key == script_toggle:
             scripts_on = not scripts_on
-            if scripts_on == False:
-                ser.write(struct.pack('h', 32767))
-
-            print(scripts_on)
 
     with keyboard.Listener(
         on_press=on_press) as listener:
             listener.join()
 			
-
-
 Thread(target = color_aimbot).start()
 Thread(target = mouse_listener).start()
 Thread(target = scripts_switch).start()

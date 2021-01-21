@@ -1,3 +1,5 @@
+# Used for arduino communication debugging
+
 import serial
 from pynput import mouse
 import time

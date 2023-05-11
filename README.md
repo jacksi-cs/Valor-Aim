@@ -1,4 +1,4 @@
-# Valorant-Bot
+# Valorant Aimbot
 Python aimbot for Valorant using MSS and PIL for screen capture, OpenCV for color detection, and an Arduino Leonardo for mouse emulation.
 
 **Update:** This no longer works as Riot has patched microcomputers disguised as a native mouse.
